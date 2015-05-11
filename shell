@@ -12,4 +12,5 @@ fine ./ -inum  inode-number  |　xargs rm -rf #remove directory
 #kill the ESTABLISHED connection 
 netstat -anp |　grep remote-ip |　grep local-open-port |　awk '{print $7}' |　cut -d \/ -f1 | grep -oE "[[:digit:]]{1,}" |　xargs kill
 
-
+#Sharing a Directory Content over HTTP with Python 
+python -m SimpleHTTPServer 80  #port 80,list current directory file 
