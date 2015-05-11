@@ -1,6 +1,15 @@
+###################
+#remove garbled   #
+###################
 1.first determine the file or directory inode 
 ll -i filename #determine the file inode
 ll -id  directory #determine the directory inode
 2.remove file or directory by find 
 find ./ -inum  inode-number   -delete  #remove file
 fine ./ -inum  inode-number  |　xargs rm -rf #remove directory
+
+
+#kill the ESTABLISHED connection 
+netstat -anp |　grep remote-ip |　grep local-open-port |　awk '{print $7}' |　cut -d \/ -f1 | grep -oE "[[:digit:]]{1,}" |　xargs kill
+
+
