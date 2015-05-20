@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+command=`mount | grep "/mnt/file"`
+if [ $? != 0 ]; then
+        printf  "Do not need umount Action\n"
+else
+        printf   "Already mounted,need umount\n"
+        umount /mnt/file
+fi
