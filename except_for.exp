@@ -1,0 +1,8 @@
+for IP in `cat IP`
+do
+
+         /path/ssh.exp $IP >> logssh 2>&1
+
+done
+
+
