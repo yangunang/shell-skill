@@ -1,0 +1,143 @@
+#!/bin/bash
+date=`date +%Y%m%d-%H%M`
+
+#windows count and passwd
+admin=administrator  #windows share accout
+pass=123456         #windows share passwd
+ 
+#linut output file to windows
+out_src_dir=/data/linuxlocalout     #local fail file
+out_dst_dir=/data/linuxout        #mount dir
+out_win_share=//IP/out   #windows share  dir collect linux file
+
+#linux input file from windows to local
+in_src_dir=/data/linuxlocalin        #local success file
+in_dst_dir=/data/linuxin       #mount dir
+in_win_share=//IP/in     #windows share dir send windows file
+
+
+
+#sendmail_function
+function mail_to_admin_out() {
+from="sample@mail.com"
+to="sample2@mail.com"
+subject="linux2win fail"
+body="This $IP mv local file to windows fail"
+smtpserver="smtp.sample.com"
+smtpport="25"
+user="sample"
+password="sample"
+mail -s "$subject" -r "$from" -S smtp="smtp://${smtpserver}:${smtpport}" \
+                              -S smtp-auth=login \
+                              -S smtp-auth-user="$user" \
+                              -S smtp-auth-password="$password" \
+                              -S sendwait \
+                              "${attargs[@]}" "$to" <<< "$body"
+}
+
+
+function mv_file_out() {
+for item in `find $out_src_dir -type f`
+do
+    CMDSTR="mv $item $out_dst_dir"
+    echo $CMDSTR   
+    $CMDSTR
+done
+}
+
+function mount_out_folder_run() {
+echo "Program Start: "`date`
+if [ -d $out_dst_dir ]
+then
+   continue
+else
+   echo "umount damage $out_dst_dir"
+   umount $out_win_share 
+fi 
+
+ckmn=`mount | grep $out_win_share`
+stcode=$?
+if [ $stcode -eq 0 ];then
+   echo "Already mount"  
+   mv_file_out
+else
+   echo "need mount"  
+   mount $out_win_share -o username=$admin,password=$pass $out_dst_dir
+   if [ $? -eq 0 ];then
+      echo "try to  mount success" 
+      mv_file_out
+   else
+      mount $out_win_share -o username=$admin,password=$pass $out_dst_dir 
+      if [ $? -ne 0 ];then
+        echo " try to mount fail exit" 
+        mail_to_admin_out
+        break
+      fi
+   fi 
+fi
+echo "Program End: "`date`
+}
+mount_out_folder_run  >>  /var/log/mnfolder/linux2win-$date.log 2>&1
+
+
+function mv_file_in() {
+for item in `find $in_dst_dir -type f`
+do
+    CMDSTR="mv $item $in_src_dir"
+    echo $CMDSTR
+    $CMDSTR
+done
+}
+
+#sendmail_function_in
+function mail_to_admin_in() {
+from="sample@mail.com"
+to="sample2@mail.com"
+subject="win2linux fail"
+body="This $IP mv winfile to linux fail"
+smtpserver="smtp.sample.com"
+smtpport="25"
+user="sample"
+password="sample"
+mail -s "$subject" -r "$from" -S smtp="smtp://${smtpserver}:${smtpport}" \
+                              -S smtp-auth=login \
+                              -S smtp-auth-user="$user" \
+                              -S smtp-auth-password="$password" \
+                              -S sendwait \
+                              "${attargs[@]}" "$to" <<< "$body"
+}
+
+function mount_in_folder_run() {
+echo "Program Start: "`date`
+if [ -d $in_dst_dir ]
+then
+   continue
+else
+   echo "umount damage $in_dst_dir"
+   umount $in_win_share 
+fi
+ckmn=`mount | grep $in_win_share`
+stcode=$?
+if [ $stcode -eq 0 ];then
+   echo "Already mount"   
+   mv_file_in
+else
+   echo "need mount"  
+   mount $in_win_share -o username=$admin,password=$pass $in_dst_dir
+   if [ $? -eq 0 ];then
+      echo "try to  mount success" 
+      mv_file_in
+   else
+      mount $in_win_share -o username=$admin,password=$pass $in_dst_dir
+      if [ $? -ne 0 ];then
+        echo " try to mount fail exit" 
+        mail_to_admin_in
+        break
+      fi
+   fi
+fi
+echo "Program End: "`date`
+}
+
+mount_in_folder_run >> /var/log/mnfolder/win2linux-$date.log 2>&1
+
