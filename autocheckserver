@@ -1,0 +1,13 @@
+#!/bin/bash
+function check {
+      "$@"
+      local status=$?
+      if [ $status -ne 0 ]
+          then
+               echo "Disconnected"
+               `echo "$@" | sed 's/pgrep \-f \-x//g'`
+      fi 
+}
+#check connection
+check pgrep -f -x "ssh -g -N -f -R localport:localserver:port remoteserver -p Rport -o ServerAliveInterval=60"
+// -o ServerAliveInterval=60  keep alive with remote host
